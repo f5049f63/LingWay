@@ -9,36 +9,36 @@
    В компонентах используем только семантические токены (bg-surface, text-muted…).
    ========================================================================== */
 :root {
-  /* Primary: единственный акцент, насыщенность ниже 80% */
-  --core-primary-00: #f5f6ff;
-  --core-primary-50: #eef0ff;
-  --core-primary-100: #e0e4ff;
-  --core-primary-200: #c7cdfe;
-  --core-primary-300: #a5aefc;
-  --core-primary-400: #7e85f5;
-  --core-primary-500: #4f46e5;
-  --core-primary-600: #4338ca;
-  --core-primary-700: #3730a3;
-  --core-primary-800: #2e2a85;
-  --core-primary-900: #25226b;
-  --core-primary-950: #1a184d;
-  --core-primary-1000: #100f33;
+  /* Primary: единственный акцент, терракота, насыщенность ниже 80% */
+  --core-primary-00: #fff8f5;
+  --core-primary-50: #fdeee8;
+  --core-primary-100: #fad9cd;
+  --core-primary-200: #f5b9a5;
+  --core-primary-300: #ee9479;
+  --core-primary-400: #e06a47;
+  --core-primary-500: #c73e1d;
+  --core-primary-600: #a63117;
+  --core-primary-700: #832613;
+  --core-primary-800: #611c0e;
+  --core-primary-900: #45140a;
+  --core-primary-950: #2d0d06;
+  --core-primary-1000: #1a0803;
 
-  /* Grayscale: тёмные ступени совпадают с разрешёнными тёмными фонами */
+  /* Grayscale: светлые ступени тёплые («бумага»), тёмные совпадают с разрешёнными тёмными фонами */
   --core-gray-00: #ffffff;
-  --core-gray-50: #f7f7f8;
-  --core-gray-100: #eeeef0;
-  --core-gray-200: #e2e2e5;
-  --core-gray-300: #cfcfd4;
-  --core-gray-400: #a3a3aa;
-  --core-gray-500: #6b6b70;
-  --core-gray-600: #5a5a60;
+  --core-gray-50: #f8f5ee;
+  --core-gray-100: #f0ebdf;
+  --core-gray-200: #e3dccb;
+  --core-gray-300: #cfc6b1;
+  --core-gray-400: #a39c8c;
+  --core-gray-500: #6e685c;
+  --core-gray-600: #5c574d;
   --core-gray-700: #46464b;
   --core-gray-750: #313131;
   --core-gray-800: #272727;
   --core-gray-850: #1f1f1f;
   --core-gray-870: #181818;
-  --core-gray-900: #0f0f0f;
+  --core-gray-900: #131209;
   --core-gray-1000: #000000;
 
   /* Статусы */
@@ -55,8 +55,8 @@
   --core-yellow-700: #a16207;
 
   /* Semantic: Light */
-  --surface: var(--core-gray-00);
-  --surface-subtle: var(--core-gray-50);
+  --surface: var(--core-gray-50);
+  --surface-subtle: var(--core-gray-100);
   --surface-raised: var(--core-gray-00);
   --surface-hover: var(--core-gray-100);
   --surface-selected: var(--core-primary-50);
@@ -72,7 +72,7 @@
   --text: var(--core-gray-900);
   --text-muted: var(--core-gray-600);
   --text-subtle: var(--core-gray-500);
-  --text-inverted: var(--core-gray-00);
+  --text-inverted: var(--core-gray-50);
   --text-on-action: var(--core-gray-00);
   --text-info: var(--core-primary-600);
   --text-success: var(--core-green-700);
@@ -85,19 +85,19 @@
   --icon: var(--core-gray-900);
   --icon-subtle: var(--core-gray-500);
   --focus-ring: var(--core-primary-500);
-  --overlay: rgb(255 255 255 / 0.72);
-  --overlay-strong: rgb(255 255 255 / 0.92);
+  --overlay: rgb(248 245 238 / 0.72);
+  --overlay-strong: rgb(248 245 238 / 0.94);
   --hero-from: #000000;
   --hero-to: #666666;
 }
 
 .dark {
-  --surface: var(--core-gray-870);
+  --surface: var(--core-gray-900);
   --surface-subtle: var(--core-gray-850);
   --surface-raised: var(--core-gray-850);
   --surface-hover: var(--core-gray-800);
   --surface-selected: var(--core-gray-800);
-  --surface-inverted: var(--core-gray-00);
+  --surface-inverted: var(--core-gray-50);
   --surface-success: var(--core-gray-800);
   --surface-error: var(--core-gray-800);
   --surface-warning: var(--core-gray-800);
@@ -122,8 +122,8 @@
   --icon: var(--core-gray-50);
   --icon-subtle: var(--core-gray-400);
   --focus-ring: var(--core-primary-300);
-  --overlay: rgb(24 24 24 / 0.72);
-  --overlay-strong: rgb(24 24 24 / 0.94);
+  --overlay: rgb(19 18 9 / 0.72);
+  --overlay-strong: rgb(19 18 9 / 0.94);
   --hero-from: #ffffff;
   --hero-to: #9b9b9b;
 }
@@ -164,6 +164,7 @@
   --color-focus: var(--focus-ring);
   --color-overlay: var(--overlay);
   --color-overlay-strong: var(--overlay-strong);
+  --color-device: var(--core-gray-870);
 }
 
 /* ==========================================================================
@@ -281,6 +282,112 @@ body {
 }
 
 /* ==========================================================================
+   Глубина. Материалы: поверхность поднята, утоплена, стеклянная, акцентная.
+   Всё через токены, поэтому работает в обеих темах. Градиенты только внутри
+   этих материалов и фоновых пятен, не в произвольных местах.
+   ========================================================================== */
+@utility mat-raised {
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+}
+@utility mat-lifted {
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+}
+@utility mat-sunken {
+  background-color: var(--surface-subtle);
+  border: 1px solid transparent;
+}
+@utility mat-glass {
+  background-color: color-mix(in srgb, var(--surface-raised) 70%, transparent);
+  border: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+@utility mat-action {
+  background-color: var(--action);
+  border: 1px solid transparent;
+}
+@utility mat-ink {
+  background-color: var(--surface-inverted);
+  border: 1px solid transparent;
+}
+@utility mat-device {
+  background-color: var(--color-device);
+  border: 1px solid var(--core-gray-750);
+}
+/* Кнопки и карточки: меняется только цвет, без подъёма и теней */
+@utility press {
+  transition:
+    background-color 300ms var(--ease-brand),
+    transform 300ms var(--ease-brand);
+  &:hover {
+    background-color: var(--action-hover);
+  }
+  &:active {
+    background-color: var(--action-click);
+    transform: scale(0.98);
+  }
+}
+@utility lift {
+  transition: border-color 300ms var(--ease-brand);
+  &:hover {
+    border-color: var(--border-strong);
+  }
+}
+
+/* 3D: сцена с перспективой и наклоняемый слой */
+.tilt-stage {
+  perspective: 1400px;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.tilt {
+  transform-style: preserve-3d;
+  transform: rotateX(calc(var(--base-rx, 0deg) + var(--rx, 0deg)))
+    rotateY(calc(var(--base-ry, 0deg) + var(--ry, 0deg)));
+  transition: transform 600ms var(--ease-brand);
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+.float-a {
+  animation: float 6s ease-in-out infinite;
+}
+.float-b {
+  animation: float 7.5s ease-in-out -2.5s infinite;
+}
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.bubble-in {
+  animation: bubble-in 600ms var(--ease-brand) both;
+}
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin-slow {
+  animation: spin-slow 60s linear infinite;
+}
+
+/* ==========================================================================
    Движение: только transform и opacity, кривая ease-brand
    ========================================================================== */
 .reveal {
@@ -317,5 +424,16 @@ body {
   }
   .motion-safe-only {
     transform: none !important;
+  }
+  .float-a,
+  .float-b,
+  .bubble-in,
+  .spin-slow {
+    animation: none;
+  }
+  .tilt,
+  .press,
+  .lift {
+    transition: none;
   }
 }

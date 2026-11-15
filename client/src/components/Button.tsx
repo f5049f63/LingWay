@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-type Variant = "primary" | "secondary" | "tertiary";
+type Variant = "primary" | "secondary" | "tertiary" | "light";
 type Size = "sm" | "md" | "lg";
 
 interface Props {
@@ -16,7 +16,7 @@ interface Props {
 }
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-lg transition-[background-color,color,border-color,transform] duration-300 ease-brand active:scale-[0.98] aria-disabled:pointer-events-none aria-disabled:opacity-50 disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex items-center justify-center gap-2 rounded-lg transition-[background-color,color,border-color] duration-300 ease-brand aria-disabled:pointer-events-none aria-disabled:opacity-50 disabled:pointer-events-none disabled:opacity-50";
 
 // Основные кнопки: 8px по вертикали и 12px по горизонтали. Крупная кнопка для CTA: 12 и 16.
 const sizes: Record<Size, string> = {
@@ -26,10 +26,10 @@ const sizes: Record<Size, string> = {
 };
 
 const variants: Record<Variant, string> = {
-  primary: "bg-action text-on-action hover:bg-action-hover active:bg-action-click",
-  secondary:
-    "border border-border-strong bg-surface text-ink hover:bg-surface-hover active:bg-surface-selected",
-  tertiary: "text-ink hover:bg-surface-hover active:bg-surface-selected",
+  primary: "mat-action press text-on-action",
+  light: "mat-raised text-ink hover:bg-surface-hover active:scale-[0.98]",
+  secondary: "mat-raised text-ink hover:bg-surface-hover active:scale-[0.98]",
+  tertiary: "text-ink hover:bg-surface-hover active:bg-surface-selected active:scale-[0.98]",
 };
 
 export default function Button({

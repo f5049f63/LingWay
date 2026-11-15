@@ -64,7 +64,7 @@ function Header() {
 
   return (
     <header className="fixed inset-x-0 top-4 z-50 flex justify-center px-4">
-      <div className="flex w-full max-w-fit items-center justify-between gap-6 rounded-2xl border border-border bg-overlay p-2 backdrop-blur-md max-md:max-w-full">
+      <div className="flex w-full max-w-fit items-center justify-between gap-6 mat-glass rounded-2xl p-2 max-md:max-w-full">
         <Link to="/" aria-label="LingWay, на главную" className="rounded-lg pl-1">
           <Logo />
         </Link>

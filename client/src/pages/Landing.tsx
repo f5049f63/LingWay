@@ -8,12 +8,14 @@ import {
   MicrophoneIcon,
   SpeakerHighIcon,
 } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import Button from "../components/Button";
 import Reveal from "../components/Reveal";
 import SituationIcon from "../components/SituationIcon";
+import Stamp from "../components/Stamp";
 import TaglineReveal from "../components/TaglineReveal";
+import Tilt from "../components/Tilt";
 import { situations } from "../data/situations";
 
 const TRIAL_LESSON = "/lesson/airport-1";
@@ -22,7 +24,9 @@ const TRIAL_LESSON = "/lesson/airport-1";
 /* Общие куски                                                         */
 /* ------------------------------------------------------------------ */
 
-function Bubble({ who, en, ru }: { who: "agent" | "you"; en: string; ru: string }) {
+type Turn = { who: "agent" | "you"; en: string; ru: string };
+
+function Bubble({ who, en, ru }: Turn) {
   const you = who === "you";
   return (
     <div
@@ -31,11 +35,11 @@ function Bubble({ who, en, ru }: { who: "agent" | "you"; en: string; ru: string 
       <p className="caption-4 text-subtle">{you ? "Вы" : "Собеседник"}</p>
       <div
         className={`rounded-xl px-4 py-3 text-left ${
-          you ? "bg-action text-on-action" : "border border-border bg-surface-subtle text-ink"
-        }`}
+          you ? "mat-action" : "mat-raised text-ink"
+        } ${you ? "text-on-action" : ""}`}
       >
         <p className="body-2">{en}</p>
-        <p className={`caption-5 mt-1 ${you ? "opacity-80" : "text-muted"}`}>{ru}</p>
+        <p className={`caption-5 mt-1 ${you ? "opacity-90" : "text-muted"}`}>{ru}</p>
       </div>
     </div>
   );
@@ -50,87 +54,170 @@ function SectionTitle({ title, text }: { title: string; text?: string }) {
   );
 }
 
+/** Шаги автоматически сменяются и зацикливаются. При reduced motion показываем всё сразу. */
+function useLoop(total: number, ms: number, start = 0) {
+  const [step, setStep] = useState(start);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setStep(total);
+      return;
+    }
+    const id = setInterval(() => setStep((s) => (s >= total + 2 ? start : s + 1)), ms);
+    return () => clearInterval(id);
+  }, [total, ms, start]);
+  return step;
+}
+
+/** Переменная --p: путь по маршруту для заполнения линии */
+function useScrollVars(route: React.RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      route.current?.style.setProperty("--p", "1");
+      return;
+    }
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const el = route.current;
+      if (el) {
+        const r = el.getBoundingClientRect();
+        const p = (window.innerHeight * 0.6 - r.top) / r.height;
+        el.style.setProperty("--p", String(Math.min(1, Math.max(0, p))));
+      }
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, [route]);
+}
+
 /* ------------------------------------------------------------------ */
-/* Hero                                                                */
+/* Hero: стопка документов в 3D с живым диалогом                       */
 /* ------------------------------------------------------------------ */
 
-function HeroVisual() {
+const heroTurns: Turn[] = [
+  { who: "agent", en: "Where are you flying today?", ru: "Куда вы летите сегодня?" },
+  { who: "you", en: "I'm flying to Lisbon.", ru: "Я лечу в Лиссабон." },
+  { who: "agent", en: "Do you have any bags to check in?", ru: "У вас есть багаж для сдачи?" },
+  { who: "you", en: "Just one suitcase, please.", ru: "Только один чемодан." },
+];
+
+function pop(on: boolean) {
+  return `transition-[opacity,transform] duration-500 ease-brand ${
+    on ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+  }`;
+}
+
+const layer = (z: number, extra = ""): CSSProperties => ({
+  transform: `translateZ(${z}px) ${extra}`,
+});
+
+function HeroStack() {
+  const step = useLoop(heroTurns.length + 1, 1600, 2);
   return (
-    <div className="relative mx-auto w-full max-w-xl">
-      {/* Плавающие карточки по бокам, только на широких экранах */}
-      <Reveal delay={500} className="absolute -left-60 top-24 z-10 hidden w-56 xl:block">
-        <div className="rounded-xl border border-border bg-surface-raised p-3 text-left">
-          <p className="caption-4 text-subtle">Фраза</p>
-          <p className="title-3 mt-1 flex items-start gap-2 text-ink">
-            <SpeakerHighIcon size={20} className="mt-0.5 shrink-0 text-info" aria-hidden="true" />
-            Could I have a window seat?
-          </p>
-          <p className="caption-5 mt-1 text-muted">Можно место у окна?</p>
-        </div>
-      </Reveal>
-      <Reveal delay={700} className="absolute -right-60 bottom-20 z-10 hidden w-56 xl:block">
-        <div className="rounded-xl border border-border bg-surface-raised p-3 text-left">
-          <p className="caption-4 text-subtle">Повторение</p>
-          <p className="title-3 mt-1 text-ink">boarding pass</p>
-          <p className="caption-5 mt-1 flex items-center gap-1 text-success">
-            <CheckCircleIcon size={16} aria-hidden="true" />
-            Запомнилось, вернётся завтра
-          </p>
-        </div>
-      </Reveal>
-
-      <figure
-        className="w-full rounded-2xl border border-border bg-surface-subtle p-2 text-left"
-        aria-label="Пример диалога в уроке: регистрация на рейс"
+    <Tilt
+      mode="window"
+      max={7}
+      baseRx={2}
+      baseRy={-6}
+      className="mx-auto w-full max-w-sm"
+      innerClassName="rounded-2xl"
+    >
+      {/* Штамп */}
+      <div
+        className={`absolute -right-2 -top-6 z-10 rounded-lg border-2 border-border-action bg-surface px-3 py-2 caption-3 text-info transition-[opacity,transform] duration-500 ease-brand ${
+          step > heroTurns.length ? "opacity-100" : "opacity-0"
+        }`}
+        style={{
+          transform: `translateZ(110px) rotate(-10deg) scale(${step > heroTurns.length ? 1 : 0.85})`,
+        }}
+        aria-hidden="true"
       >
-        <div className="rounded-lg border border-border bg-surface-raised">
-          <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-3">
-            <div>
-              <p className="title-4 text-ink">Регистрация на рейс</p>
-              <p className="caption-5 text-subtle">Аэропорт, урок 1</p>
-            </div>
-            <div
-              className="h-2 w-24 overflow-hidden rounded-full bg-surface-hover"
-              role="img"
-              aria-label="Пройдено 2 из 5 шагов"
-            >
-              <div className="h-full w-2/5 rounded-full bg-action" />
-            </div>
+        Готово к вылету
+      </div>
+
+      {/* Основной талон */}
+      <figure
+        className="mat-lifted relative rounded-2xl text-left"
+        aria-label="Пример диалога: регистрация на рейс"
+        style={layer(0)}
+      >
+        <div className="mat-action flex items-center justify-between gap-4 rounded-t-2xl px-6 py-4 text-on-action">
+          <p className="title-3">LingWay</p>
+          <p className="caption-3">Посадочный талон</p>
+        </div>
+        <div className="grid grid-cols-3 gap-4 px-6 py-4">
+          <div>
+            <p className="caption-4 text-subtle">Пассажир</p>
+            <p className="title-3 text-ink">Вы</p>
           </div>
-          <div className="flex flex-col gap-4 p-4">
-            <Reveal delay={200}>
-              <Bubble who="agent" en="Where are you flying today?" ru="Куда вы летите сегодня?" />
-            </Reveal>
-            <Reveal delay={400} className="flex flex-col">
-              <Bubble who="you" en="I'm flying to Lisbon." ru="Я лечу в Лиссабон." />
-            </Reveal>
-            <Reveal delay={600}>
-              <Bubble
-                who="agent"
-                en="Do you have any bags to check in?"
-                ru="У вас есть багаж для сдачи?"
-              />
-            </Reveal>
-            <Reveal delay={800}>
-              <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface p-3">
-                <p className="body-6 text-muted">Нажмите и ответьте вслух</p>
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-action text-on-action">
-                  <MicrophoneIcon size={20} />
-                </span>
-              </div>
-            </Reveal>
+          <div>
+            <p className="caption-4 text-subtle">Куда</p>
+            <p className="title-3 text-ink">Лиссабон</p>
+          </div>
+          <div>
+            <p className="caption-4 text-subtle">Урок</p>
+            <p className="title-3 text-ink">Аэропорт</p>
+          </div>
+        </div>
+
+        {/* Линия отрыва: вырезы выглядят утопленными */}
+        <div
+          className="relative h-0 border-t-2 border-dashed border-border-strong"
+          aria-hidden="true"
+        >
+          <span className="absolute -left-3 -top-3 size-6 rounded-full border border-border bg-surface" />
+          <span className="absolute -right-3 -top-3 size-6 rounded-full border border-border bg-surface" />
+        </div>
+
+        <div className="flex min-h-[360px] flex-col gap-4 p-6">
+          {heroTurns.map((t, i) => (
+            <div key={t.en} className={pop(step > i)}>
+              <Bubble {...t} />
+            </div>
+          ))}
+          <div
+            className={`mat-sunken mt-auto flex items-center justify-between gap-4 rounded-lg p-3 ${pop(step > heroTurns.length - 1)}`}
+          >
+            <p className="body-6 text-muted">Ответьте вслух или выберите фразу</p>
+            <span className="mat-action flex size-10 shrink-0 items-center justify-center rounded-full text-on-action">
+              <MicrophoneIcon size={20} aria-hidden="true" />
+            </span>
           </div>
         </div>
       </figure>
-    </div>
+
+      {/* Плавающая стеклянная карточка на отдельной глубине */}
+      <div
+        className="absolute -right-4 bottom-24 hidden md:block"
+        style={layer(120)}
+        aria-hidden="true"
+      >
+        <div className="float-b mat-lifted flex items-center gap-3 rounded-xl p-3">
+          <span className="mat-action flex size-8 shrink-0 items-center justify-center rounded-full text-on-action">
+            <LightningIcon size={16} />
+          </span>
+          <div className="text-left">
+            <p className="title-4 text-ink">boarding pass</p>
+            <p className="caption-5 text-muted">Повторить сегодня</p>
+          </div>
+        </div>
+      </div>
+    </Tilt>
   );
 }
 
 /* ------------------------------------------------------------------ */
 /* Примеры диалогов                                                    */
 /* ------------------------------------------------------------------ */
-
-type Turn = { who: "agent" | "you"; en: string; ru: string };
 
 const demos: {
   key: string;
@@ -197,6 +284,43 @@ const demos: {
   },
 ];
 
+function Phone({ demo }: { demo: (typeof demos)[number] }) {
+  return (
+    <div className="mat-device relative mx-auto w-80 rounded-4xl p-2">
+      <div className="relative flex min-h-[560px] flex-col overflow-hidden rounded-3xl bg-surface">
+        <span
+          className="absolute left-1/2 top-2 z-10 h-5 w-20 -translate-x-1/2 rounded-full bg-device"
+          aria-hidden="true"
+        />
+        <div className="mat-raised mt-0 rounded-none border-x-0 border-t-0 px-4 pb-3 pt-10">
+          <p className="title-4 text-ink">{demo.title}</p>
+          <div className="mt-3 flex gap-1" aria-hidden="true">
+            {demo.turns.map((t, i) => (
+              <span
+                key={t.en}
+                className={`h-1 flex-1 rounded-full ${i < 3 ? "bg-action" : "bg-border-strong"}`}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-1 flex-col gap-4 p-4">
+          {demo.turns.map((t, i) => (
+            <div key={t.en} className="bubble-in" style={{ animationDelay: `${i * 160}ms` }}>
+              <Bubble {...t} />
+            </div>
+          ))}
+        </div>
+        <div className="mat-sunken m-3 flex items-center justify-between gap-3 rounded-2xl p-3">
+          <p className="caption-2 text-muted">Ответьте вслух</p>
+          <span className="mat-action flex size-10 shrink-0 items-center justify-center rounded-full text-on-action">
+            <MicrophoneIcon size={20} aria-hidden="true" />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DemoSection() {
   const [active, setActive] = useState(demos[0].key);
   const demo = demos.find((d) => d.key === active) ?? demos[0];
@@ -204,14 +328,14 @@ function DemoSection() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-20">
       <SectionTitle
-        title="Так выглядит диалог в уроке"
+        title="Так звучит диалог в уроке"
         text="Выберите ситуацию и прочитайте пример. В уроке вы отвечаете сами, вслух или выбором фразы."
       />
-      <div className="mt-12 grid gap-6 lg:grid-cols-[280px_1fr]">
+      <div className="mt-16 grid items-center gap-12 lg:grid-cols-[1fr_360px]">
         <div
           role="tablist"
           aria-label="Ситуации"
-          className="flex gap-2 overflow-x-auto lg:flex-col"
+          className="mat-sunken flex flex-col gap-2 rounded-3xl p-2"
         >
           {demos.map((d) => {
             const on = d.key === active;
@@ -224,38 +348,33 @@ function DemoSection() {
                 aria-selected={on}
                 aria-controls="demo-panel"
                 onClick={() => setActive(d.key)}
-                className={`flex shrink-0 items-center gap-3 rounded-2xl border p-3 text-left transition-[background-color,border-color,transform] duration-300 ease-brand active:scale-[0.98] ${
+                className={`flex items-center gap-4 rounded-2xl p-4 text-left transition-[transform,background-color] duration-500 ease-brand active:scale-[0.98] ${
                   on
-                    ? "border-border-action bg-surface-selected"
-                    : "border-border bg-surface-raised hover:border-border-strong hover:bg-surface-hover"
+                    ? "mat-lifted border-border-action"
+                    : "border border-transparent hover:bg-surface-hover"
                 }`}
               >
                 <SituationIcon name={d.icon} />
-                <span className="title-2 text-ink">{d.label}</span>
+                <span className="flex flex-col">
+                  <span className="title-1 text-ink">{d.label}</span>
+                  <span className="caption-2 text-muted">{d.title}</span>
+                </span>
               </button>
             );
           })}
         </div>
 
-        <div
-          id="demo-panel"
-          role="tabpanel"
-          aria-labelledby={`tab-${active}`}
-          className="rounded-2xl border border-border bg-surface-subtle p-2"
-        >
-          <Reveal key={active}>
-            <div className="rounded-lg border border-border bg-surface-raised">
-              <div className="border-b border-border px-4 py-3">
-                <p className="title-4 text-ink">{demo.title}</p>
-                <p className="caption-5 text-subtle">{demo.label}, пример диалога</p>
-              </div>
-              <div className="flex flex-col gap-4 p-4 md:p-6">
-                {demo.turns.map((t) => (
-                  <Bubble key={t.en} {...t} />
-                ))}
-              </div>
-            </div>
-          </Reveal>
+        <div id="demo-panel" role="tabpanel" aria-labelledby={`tab-${active}`} className="relative">
+          <Tilt
+            mode="hover"
+            max={6}
+            baseRx={2}
+            baseRy={-6}
+            innerClassName="rounded-4xl"
+            className="relative"
+          >
+            <Phone key={active} demo={demo} />
+          </Tilt>
         </div>
       </div>
     </section>
@@ -263,10 +382,10 @@ function DemoSection() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Польза: бенто с мини интерфейсами                                   */
+/* Польза: цветное бенто                                               */
 /* ------------------------------------------------------------------ */
 
-const mini = "rounded-lg border border-border bg-surface p-4";
+const mini = "mat-raised rounded-lg p-4 text-ink";
 
 function PhrasesMini() {
   const rows = [
@@ -305,7 +424,7 @@ function VoiceMini() {
         ))}
       </div>
       <p className="caption-2 text-muted">Повторите: I&apos;d like a coffee, please</p>
-      <span className="flex size-10 items-center justify-center rounded-full bg-action text-on-action">
+      <span className="mat-action flex size-10 items-center justify-center rounded-full text-on-action">
         <MicrophoneIcon size={20} aria-hidden="true" />
       </span>
     </div>
@@ -323,7 +442,7 @@ function ReviewMini() {
       {rows.map(([w, when], i) => (
         <div
           key={w}
-          className="flex items-center justify-between gap-3 rounded-lg bg-surface-subtle px-3 py-2"
+          className="mat-sunken flex items-center justify-between gap-3 rounded-lg px-3 py-2"
         >
           <p className="title-4 text-ink">{w}</p>
           <p className={`caption-4 ${i === 0 ? "text-info" : "text-subtle"}`}>{when}</p>
@@ -341,7 +460,7 @@ function PhrasebookMini() {
   ];
   return (
     <div className={`${mini} flex flex-col gap-3`}>
-      <div className="flex items-center gap-2 rounded-lg border border-border-strong px-3 py-2">
+      <div className="mat-sunken flex items-center gap-2 rounded-lg px-3 py-2">
         <MagnifyingGlassIcon size={20} className="text-icon-subtle" aria-hidden="true" />
         <p className="body-5 text-ink">boarding</p>
       </div>
@@ -362,18 +481,24 @@ const benefits = [
     text: "Каждая тема собрана вокруг одного места: аэропорт, отель, кафе. Вы учите то, что скажете там на самом деле.",
     visual: <PhrasesMini />,
     wide: true,
+    tone: "mat-action text-on-action",
+    sub: "text-on-action opacity-90",
   },
   {
     icon: MicrophoneIcon,
     title: "Отвечаете вслух",
     text: "В диалогах вы не только читаете, а произносите ответ и слышите образец.",
     visual: <VoiceMini />,
+    tone: "mat-ink text-inverted",
+    sub: "text-inverted opacity-80",
   },
   {
     icon: LightningIcon,
     title: "Слова возвращаются вовремя",
     text: "То, в чём вы ошиблись, снова появляется в практике через интервалы, пока не запомнится.",
     visual: <ReviewMini />,
+    tone: "mat-raised text-ink",
+    sub: "text-muted",
   },
   {
     icon: BookOpenIcon,
@@ -381,6 +506,8 @@ const benefits = [
     text: "Все фразы по темам находятся за секунду, даже если нет времени на урок. Удобно прямо в дороге.",
     visual: <PhrasebookMini />,
     wide: true,
+    tone: "mat-lifted text-ink",
+    sub: "text-muted",
   },
 ];
 
@@ -402,6 +529,18 @@ const steps = [
     text: "Слова и фразы, в которых вы ошиблись, возвращаются в повторении. Вы видите, что уже готово, а что стоит повторить.",
   },
 ];
+
+function SituationsMini() {
+  return (
+    <div className="mat-raised grid grid-cols-4 gap-2 rounded-lg p-3" aria-hidden="true">
+      {situations.slice(0, 8).map((s) => (
+        <SituationIcon key={s.slug} name={s.icon} size={20} />
+      ))}
+    </div>
+  );
+}
+
+const stepVisuals = [<SituationsMini key="a" />, <VoiceMini key="b" />, <ReviewMini key="c" />];
 
 const faq = [
   {
@@ -435,43 +574,40 @@ const faq = [
 /* ------------------------------------------------------------------ */
 
 export default function Landing() {
+  const route = useRef<HTMLOListElement>(null);
+  useScrollVars(route);
+
   return (
-    <>
+    <div className="relative isolate overflow-x-clip">
       {/* 1. Hero */}
-      <section className="px-4 pb-24 pt-16 text-center">
-        <h1 className="heading-1 hero-text mx-auto max-w-[680px]">
-          Английский, который <br className="hidden md:block" />
-          пригодится в поездке
-        </h1>
-        <p className="body-3 mx-auto mt-6 max-w-[680px] text-muted md:text-lg">
-          LingWay учит конкретным моментам поездки: регистрация на рейс, заселение в отель, заказ в
-          кафе. Короткие уроки, фразы с озвучкой и диалоги, в которых отвечаете вы.
-        </p>
-        <div className="mt-8 flex flex-col items-center gap-3">
-          <Button to={TRIAL_LESSON} size="lg">
-            Пройти урок про аэропорт
-            <ArrowRightIcon size={20} />
-          </Button>
-          <p className="caption-2 text-subtle">
-            Бесплатно, в браузере. Первый урок без регистрации
+      <section className="mx-auto grid max-w-6xl items-center gap-16 px-4 pb-20 pt-12 lg:grid-cols-[1fr_384px] lg:gap-12">
+        <div>
+          <h1 className="heading-1 hero-text max-w-[680px]">
+            Английский, который <br className="hidden md:block" />
+            пригодится в поездке
+          </h1>
+          <p className="body-3 mt-6 max-w-[680px] text-muted md:text-lg">
+            LingWay учит конкретным моментам поездки: регистрация на рейс, заселение в отель, заказ
+            в кафе. Короткие уроки, фразы с озвучкой и диалоги, в которых отвечаете вы.
           </p>
+          <div className="mt-8 flex flex-col items-start gap-3">
+            <Button to={TRIAL_LESSON} size="lg">
+              Пройти урок про аэропорт
+              <ArrowRightIcon size={20} />
+            </Button>
+            <p className="caption-2 text-subtle">
+              Бесплатно, в браузере. Первый урок без регистрации
+            </p>
+          </div>
+          <ul className="mt-12 flex flex-wrap gap-2" aria-label="Ситуации">
+            {situations.map((s) => (
+              <li key={s.slug} className="mat-raised rounded-full px-3 py-1 caption-1 text-muted">
+                {s.title}
+              </li>
+            ))}
+          </ul>
         </div>
-        <div className="mt-16">
-          <HeroVisual />
-        </div>
-        <ul
-          className="mx-auto mt-12 flex max-w-3xl flex-wrap justify-center gap-2"
-          aria-label="Ситуации"
-        >
-          {situations.map((s) => (
-            <li
-              key={s.slug}
-              className="rounded-full border border-border bg-surface-raised px-3 py-1 caption-1 text-muted"
-            >
-              {s.title}
-            </li>
-          ))}
-        </ul>
+        <HeroStack />
       </section>
 
       {/* 2. Tagline reveal */}
@@ -485,12 +621,12 @@ export default function Landing() {
         />
       </section>
 
-      {/* 3. Проблема и решение */}
+      {/* 3. Проблема и решение: утопленная и поднятая поверхности */}
       <section className="mx-auto max-w-6xl px-4 py-20">
         <SectionTitle title="Учебник готовит к экзамену, а в поездке нужны конкретные фразы" />
         <div className="mt-12 grid gap-6 md:grid-cols-2">
           <Reveal>
-            <div className="h-full rounded-2xl bg-surface-subtle p-6">
+            <div className="mat-sunken h-full rounded-2xl p-6">
               <p className="caption-3 text-subtle">Как учат обычно</p>
               <ul className="mt-4 flex flex-col gap-3">
                 {[
@@ -506,62 +642,78 @@ export default function Landing() {
             </div>
           </Reveal>
           <Reveal delay={100}>
-            <div className="h-full rounded-2xl border border-border-action bg-surface-raised p-6">
-              <p className="caption-3 text-info">Как учим мы</p>
-              <ul className="mt-4 flex flex-col gap-3">
-                {[
-                  "Начинаете с ситуации, которая ждёт вас в поездке",
-                  "Учите фразы целиком: их можно сразу сказать",
-                  "Отвечаете в диалоге вслух, пока рядом нет живого собеседника",
-                ].map((t) => (
-                  <li key={t} className="body-3 flex items-start gap-3 text-ink">
-                    <CheckCircleIcon size={24} className="shrink-0 text-info" aria-hidden="true" />
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <Tilt mode="hover" max={3} className="h-full">
+              <div className="mat-lifted h-full rounded-2xl border-border-action p-6">
+                <p className="caption-3 text-info">Как учим мы</p>
+                <ul className="mt-4 flex flex-col gap-3">
+                  {[
+                    "Начинаете с ситуации, которая ждёт вас в поездке",
+                    "Учите фразы целиком: их можно сразу сказать",
+                    "Отвечаете в диалоге вслух, пока рядом нет живого собеседника",
+                  ].map((t) => (
+                    <li key={t} className="body-3 flex items-start gap-3 text-ink">
+                      <CheckCircleIcon
+                        size={24}
+                        className="shrink-0 text-info"
+                        aria-hidden="true"
+                      />
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Tilt>
           </Reveal>
         </div>
       </section>
 
-      {/* 4. Примеры диалогов */}
+      {/* 4. Примеры диалогов в телефоне */}
       <DemoSection />
 
-      {/* 5. Польза */}
+      {/* 5. Польза: наклоняемые плитки, мини интерфейсы приподняты над плиткой */}
       <section className="mx-auto max-w-6xl px-4 py-20">
         <SectionTitle title="Всё, что нужно в дороге, в одном месте" />
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
+        <div className="mt-12 grid gap-4 md:grid-cols-3">
           {benefits.map((b, i) => (
             <Reveal key={b.title} delay={(i % 2) * 100} className={b.wide ? "md:col-span-2" : ""}>
-              <article className="flex h-full flex-col gap-6 rounded-2xl border border-border bg-surface-raised p-6">
-                {b.visual}
-                <div className="flex flex-col gap-2">
-                  <h3 className="heading-6 flex items-center gap-3 text-ink">
-                    <b.icon size={24} className="shrink-0 text-info" aria-hidden="true" />
-                    {b.title}
-                  </h3>
-                  <p className="body-3 text-muted">{b.text}</p>
-                </div>
-              </article>
+              <Tilt mode="hover" max={4} className="h-full">
+                <article
+                  className={`preserve-3d flex h-full flex-col gap-6 rounded-2xl p-6 ${b.tone}`}
+                >
+                  <div style={{ transform: "translateZ(36px)" }}>{b.visual}</div>
+                  <div className="flex flex-col gap-2" style={{ transform: "translateZ(16px)" }}>
+                    <h3 className="heading-6 flex items-center gap-3">
+                      <b.icon size={24} className="shrink-0" aria-hidden="true" />
+                      {b.title}
+                    </h3>
+                    <p className={`body-3 ${b.sub}`}>{b.text}</p>
+                  </div>
+                </article>
+              </Tilt>
             </Reveal>
           ))}
         </div>
       </section>
 
-      {/* 6. Как работает */}
+      {/* 6. Как работает: стопка карточек, каждая прилипает и ложится поверх */}
       <section className="mx-auto max-w-6xl px-4 py-20">
         <SectionTitle title="Три шага от «не знаю, что сказать» до готовой фразы" />
-        <ol className="mt-12 flex flex-col gap-4">
+        <ol className="mt-12 flex flex-col gap-12 md:gap-24">
           {steps.map((s, i) => (
-            <li key={s.title}>
+            <li key={s.title} className="md:sticky" style={{ top: 96 + i * 24 } as CSSProperties}>
               <Reveal>
-                <div className="grid gap-4 rounded-2xl bg-surface-subtle p-6 md:grid-cols-[96px_1fr_1fr] md:items-center md:gap-8">
-                  <p className="heading-1 text-info" aria-hidden="true">
+                <div className="mat-lifted grid gap-6 rounded-3xl p-6 md:grid-cols-[64px_1fr_280px] md:items-center md:gap-8 md:p-8">
+                  <span
+                    className="mat-action flex size-16 items-center justify-center rounded-2xl heading-3 text-on-action"
+                    aria-hidden="true"
+                  >
                     {i + 1}
-                  </p>
-                  <h3 className="heading-4 text-ink">{s.title}</h3>
-                  <p className="body-3 text-muted">{s.text}</p>
+                  </span>
+                  <div className="flex flex-col gap-2">
+                    <h3 className="heading-4 text-ink">{s.title}</h3>
+                    <p className="body-3 text-muted">{s.text}</p>
+                  </div>
+                  <div className="mat-sunken rounded-2xl p-3">{stepVisuals[i]}</div>
                 </div>
               </Reveal>
             </li>
@@ -569,44 +721,55 @@ export default function Landing() {
         </ol>
       </section>
 
-      {/* 7. Ситуации: бенто с примерами фраз */}
+      {/* 7. Маршрут: линия заполняется по мере прокрутки */}
       <section className="mx-auto max-w-6xl px-4 py-20">
         <SectionTitle
-          title="Восемь ситуаций, которые встретятся в поездке"
-          text="Откройте любую, чтобы увидеть уроки. Порядок не важен, можно начать с самой волнующей."
+          title="Маршрут из восьми остановок"
+          text="Идите по порядку или сразу к нужной. Каждая остановка это одна ситуация поездки со своими уроками."
         />
-        <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {situations.map((s, i) => {
-            const big = i === 0 || i === 3;
-            return (
-              <li key={s.slug} className={big ? "lg:col-span-2" : ""}>
-                <Reveal delay={(i % 4) * 60} className="h-full">
+        <ol ref={route} className="relative mt-12 flex flex-col gap-6">
+          <span
+            className="mat-sunken absolute bottom-0 left-4 top-0 w-1 -translate-x-1/2 rounded-full md:left-1/2"
+            aria-hidden="true"
+          />
+          <span
+            className="absolute bottom-0 left-4 top-0 w-1 origin-top -translate-x-1/2 rounded-full bg-action md:left-1/2"
+            style={{ transform: "translateX(-50%) scaleY(var(--p, 0))" }}
+            aria-hidden="true"
+          />
+          {situations.map((s, i) => (
+            <li key={s.slug} className="relative pl-12 md:grid md:grid-cols-2 md:gap-16 md:pl-0">
+              <span className="mat-action absolute left-0 top-4 z-10 flex size-8 items-center justify-center rounded-full caption-3 text-on-action ring-4 ring-surface md:left-1/2 md:-translate-x-1/2">
+                {i + 1}
+              </span>
+              <Reveal className={i % 2 === 0 ? "md:col-start-1" : "md:col-start-2"}>
+                <Tilt mode="hover" max={4}>
                   <Link
                     to={`/situation/${s.slug}`}
-                    className="group flex h-full flex-col gap-4 rounded-2xl border border-border bg-surface-raised p-4 transition-[background-color,border-color,transform] duration-300 ease-brand hover:-translate-y-1 hover:border-border-strong hover:bg-surface-hover active:scale-[0.98]"
+                    className="mat-raised group flex flex-col gap-4 rounded-2xl p-4 transition-colors duration-300 ease-brand hover:border-border-strong"
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <SituationIcon name={s.icon} />
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <SituationIcon name={s.icon} />
+                        <h3 className="title-1 text-ink">{s.title}</h3>
+                      </div>
                       <ArrowRightIcon
                         size={20}
-                        className="text-icon-subtle transition-transform duration-500 ease-brand group-hover:translate-x-1"
+                        className="shrink-0 text-icon-subtle transition-transform duration-500 ease-brand group-hover:translate-x-1"
                         aria-hidden="true"
                       />
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <h3 className="title-2 text-ink">{s.title}</h3>
-                      <p className="body-6 text-muted">{s.description}</p>
-                    </div>
-                    <div className="mt-auto rounded-lg border border-border bg-surface px-3 py-2 text-left">
+                    <p className="body-6 text-muted">{s.description}</p>
+                    <div className="mat-sunken rounded-lg px-3 py-2 text-left">
                       <p className="title-4 text-ink">{s.phrase}</p>
                       <p className="caption-5 text-muted">{s.phraseRu}</p>
                     </div>
                   </Link>
-                </Reveal>
-              </li>
-            );
-          })}
-        </ul>
+                </Tilt>
+              </Reveal>
+            </li>
+          ))}
+        </ol>
       </section>
 
       {/* 8. FAQ */}
@@ -616,10 +779,7 @@ export default function Landing() {
         </Reveal>
         <div className="mt-12 flex flex-col gap-3">
           {faq.map((item) => (
-            <details
-              key={item.q}
-              className="group rounded-2xl border border-border bg-surface-raised open:bg-surface-subtle"
-            >
+            <details key={item.q} className="mat-raised group rounded-2xl open:mat-sunken">
               <summary className="title-2 flex cursor-pointer list-none items-center justify-between gap-4 rounded-2xl p-4 text-ink marker:hidden [&::-webkit-details-marker]:hidden">
                 {item.q}
                 <span
@@ -633,28 +793,26 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* 9. Финальный CTA, тот же что в hero */}
+      {/* 9. Финальный CTA: свет, штампы, объём */}
       <section className="mx-auto max-w-6xl px-4 pb-24 pt-12">
         <Reveal>
-          <div className="flex flex-col items-center gap-6 rounded-2xl bg-surface-inverted px-6 py-16 text-center">
-            <h2 className="heading-3 max-w-[680px] text-inverted">
-              Первый урок займёт несколько минут
-            </h2>
-            <p className="body-3 max-w-[680px] text-inverted opacity-80">
+          <div className="mat-action relative flex flex-col items-center gap-6 overflow-hidden rounded-3xl px-6 py-20 text-center text-on-action">
+            <Stamp
+              size={200}
+              className="spin-slow absolute -left-12 -top-12 text-on-action opacity-20"
+            />
+            <h2 className="heading-2 relative max-w-[680px]">Первый урок займёт несколько минут</h2>
+            <p className="body-3 relative max-w-[680px] opacity-90 md:text-lg">
               Бесплатно, без регистрации и без установки. Откройте урок про аэропорт и ответьте на
               первый вопрос сотрудника стойки.
             </p>
-            <Button
-              to={TRIAL_LESSON}
-              size="lg"
-              className="!bg-surface !text-ink hover:!bg-surface-hover"
-            >
+            <Button to={TRIAL_LESSON} size="lg" variant="light" className="relative">
               Пройти урок про аэропорт
               <ArrowRightIcon size={20} />
             </Button>
           </div>
         </Reveal>
       </section>
-    </>
+    </div>
   );
 }
