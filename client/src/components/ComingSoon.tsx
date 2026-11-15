@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { HammerIcon } from "@phosphor-icons/react";
+import Button from "./Button";
 
 interface Props {
   title: string;
@@ -8,12 +9,15 @@ interface Props {
 /** Заглушка для страниц, которые ещё не сделаны. Замени её настоящей страницей. */
 export default function ComingSoon({ title, description }: Props) {
   return (
-    <section className="mx-auto max-w-2xl p-8 text-center">
-      <h1 className="text-3xl font-bold">{title}</h1>
-      <p className="mt-3">{description ?? "Эта страница в разработке."}</p>
-      <Link to="/" className="mt-6 inline-block underline">
+    <section className="mx-auto flex max-w-2xl flex-col items-center gap-4 px-4 py-24 text-center">
+      <span className="flex size-12 items-center justify-center rounded-lg bg-surface-selected text-info">
+        <HammerIcon size={24} />
+      </span>
+      <h1 className="heading-4 text-ink">{title}</h1>
+      <p className="body-3 text-muted">{description ?? "Эта страница в разработке."}</p>
+      <Button to="/" variant="secondary">
         На главную
-      </Link>
+      </Button>
     </section>
   );
 }
