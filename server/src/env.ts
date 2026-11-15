@@ -5,7 +5,10 @@ const schema = z.object({
   PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string().min(1, "DATABASE_URL не задан (см. server/.env.example)"),
   DIRECT_URL: z.string().optional(),
-  JWT_SECRET: z.string().min(16).optional(),
+  JWT_SECRET: z
+    .string()
+    .min(16, "JWT_SECRET не задан или короче 16 символов (см. server/.env.example)"),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
 });
 
