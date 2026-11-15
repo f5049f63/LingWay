@@ -4,6 +4,7 @@ import Alert from "../components/Alert";
 import Button from "../components/Button";
 import Field from "../components/Field";
 import PasswordField from "../components/PasswordField";
+import { destinations, purposes, titleOf } from "../data/onboarding";
 import { useAuth } from "../hooks/useAuth";
 import type { User } from "../context/AuthContext";
 import { api, ApiError } from "../lib/api";
@@ -94,6 +95,33 @@ function ProfileForm() {
           {form.loading ? "Сохраняем" : "Сохранить"}
         </Button>
       </form>
+    </Section>
+  );
+}
+
+/** Ответы онбординга: показываем и ведём на страницу, где их можно изменить */
+function TripSection() {
+  const { user } = useAuth();
+  const trip = user?.trip;
+  const facts = [
+    titleOf(purposes, trip?.purpose ?? null) && `Цель: ${titleOf(purposes, trip?.purpose ?? null)}`,
+    titleOf(destinations, trip?.destination ?? null) &&
+      `Страна: ${titleOf(destinations, trip?.destination ?? null)}`,
+    trip?.level && `Уровень: ${trip.level}`,
+  ].filter(Boolean);
+
+  return (
+    <Section
+      title="Маршрут"
+      text={
+        facts.length > 0
+          ? facts.join(". ") + "."
+          : "Ответов пока нет. Пройдите короткий опрос, и мы расставим ситуации под вашу поездку."
+      }
+    >
+      <Button to="/welcome" variant="secondary">
+        {facts.length > 0 ? "Изменить ответы" : "Пройти опрос"}
+      </Button>
     </Section>
   );
 }
@@ -337,6 +365,7 @@ export default function Settings() {
         <p className="body-3 mt-2 text-muted">Данные аккаунта и безопасность.</p>
       </header>
       <ProfileForm />
+      <TripSection />
       <EmailForm />
       <PasswordForm />
       <DeleteAccount />

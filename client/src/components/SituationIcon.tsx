@@ -26,13 +26,20 @@ const icons: Record<SituationIconKey, ComponentType<{ size?: number }>> = {
 export default function SituationIcon({
   name,
   size = 24,
+  onSelected = false,
 }: {
   name: SituationIconKey;
   size?: number;
+  /** Плитка лежит на фоне Surface/Selected: берём другой фон, чтобы она не сливалась */
+  onSelected?: boolean;
 }) {
   const Icon = icons[name];
   return (
-    <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-surface-selected text-info">
+    <span
+      className={`flex size-12 shrink-0 items-center justify-center rounded-lg text-info ${
+        onSelected ? "bg-surface" : "bg-surface-selected"
+      }`}
+    >
       <Icon size={size} />
     </span>
   );

@@ -4,6 +4,7 @@ import { rateLimit } from "express-rate-limit";
 import { z } from "zod";
 import { prisma } from "../db";
 import { clearAuthCookie, setAuthCookie } from "../lib/auth";
+import { onboardingSchema } from "../lib/onboarding";
 import { checkPassword, hashPassword, toPublic } from "../lib/user";
 import {
   currentPasswordSchema,
@@ -43,6 +44,30 @@ accountRouter.patch("/profile", async (req, res) => {
     where: { id: req.user!.id },
     data: { name: parsed.data.name },
   });
+  res.json({ user: toPublic(user) });
+});
+
+// Ответы онбординга. Можно отправлять повторно: так пользователь меняет маршрут в настройках
+accountRouter.put("/onboarding", async (req, res) => {
+  const parsed = onboardingSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json(validationError(parsed.error));
+    return;
+  }
+  const { purpose, destination, level } = parsed.data;
+  const user = await prisma.user.update({
+    where: { id: req.user!.id },
+    data: { tripPurpose: purpose, destination, level, onboardedAt: new Date() },
+  });
+  res.json({ user: toPublic(user) });
+});
+
+// Пропуск онбординга: ответы не сохраняем, но больше его не показываем после входа
+accountRouter.post("/onboarding/skip", async (req, res) => {
+  const user =
+    req.user!.onboardedAt === null
+      ? await prisma.user.update({ where: { id: req.user!.id }, data: { onboardedAt: new Date() } })
+      : req.user!;
   res.json({ user: toPublic(user) });
 });
 

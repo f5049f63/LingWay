@@ -22,6 +22,12 @@ model User {
   createdAt         DateTime        @default(now())
   // Когда меняли пароль: токены, выданные раньше, перестают действовать
   passwordChangedAt DateTime?
+  // Онбординг: ответы после регистрации. Допустимые значения в src/lib/onboarding.ts
+  tripPurpose       String?
+  destination       String?
+  level             String?
+  // Когда прошли или пропустили онбординг. Пусто: после входа покажем его
+  onboardedAt       DateTime?
   passwordResets    PasswordReset[]
 }
 

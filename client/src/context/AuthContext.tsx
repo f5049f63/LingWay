@@ -1,14 +1,24 @@
 import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { api, ApiError } from "../lib/api";
 
-export type User = { id: string; email: string; name: string; role: "USER" | "ADMIN" };
+export type Trip = { purpose: string | null; destination: string | null; level: string | null };
+
+export type User = {
+  id: string;
+  email: string;
+  name: string;
+  role: "USER" | "ADMIN";
+  /** Прошёл или пропустил онбординг */
+  onboarded: boolean;
+  trip: Trip;
+};
 
 export interface AuthState {
   /** undefined: ещё проверяем, null: не вошли */
   user: User | null | undefined;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  /** Обновить данные пользователя после смены имени или email */
+  /** Обновить данные пользователя после смены имени, email или ответов онбординга */
   setUser: (user: User | null) => void;
   logout: () => Promise<void>;
 }
