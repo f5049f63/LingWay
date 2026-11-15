@@ -1,10 +1,321 @@
 @import "tailwindcss";
+@import "@fontsource-variable/manrope";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ==========================================================================
+   Слой 1. Core Colors: сырые палитры. Только здесь живут hex-значения.
+   Слой 2. Semantic (ниже): роли, которые меняются между Light и Dark.
+   В компонентах используем только семантические токены (bg-surface, text-muted…).
+   ========================================================================== */
+:root {
+  /* Primary: единственный акцент, насыщенность ниже 80% */
+  --core-primary-00: #f5f6ff;
+  --core-primary-50: #eef0ff;
+  --core-primary-100: #e0e4ff;
+  --core-primary-200: #c7cdfe;
+  --core-primary-300: #a5aefc;
+  --core-primary-400: #7e85f5;
+  --core-primary-500: #4f46e5;
+  --core-primary-600: #4338ca;
+  --core-primary-700: #3730a3;
+  --core-primary-800: #2e2a85;
+  --core-primary-900: #25226b;
+  --core-primary-950: #1a184d;
+  --core-primary-1000: #100f33;
+
+  /* Grayscale: тёмные ступени совпадают с разрешёнными тёмными фонами */
+  --core-gray-00: #ffffff;
+  --core-gray-50: #f7f7f8;
+  --core-gray-100: #eeeef0;
+  --core-gray-200: #e2e2e5;
+  --core-gray-300: #cfcfd4;
+  --core-gray-400: #a3a3aa;
+  --core-gray-500: #6b6b70;
+  --core-gray-600: #5a5a60;
+  --core-gray-700: #46464b;
+  --core-gray-750: #313131;
+  --core-gray-800: #272727;
+  --core-gray-850: #1f1f1f;
+  --core-gray-870: #181818;
+  --core-gray-900: #0f0f0f;
+  --core-gray-1000: #000000;
+
+  /* Статусы */
+  --core-red-50: #fef2f2;
+  --core-red-400: #f87171;
+  --core-red-600: #dc2626;
+  --core-red-700: #b91c1c;
+  --core-green-50: #f0fdf4;
+  --core-green-400: #4ade80;
+  --core-green-600: #16a34a;
+  --core-green-700: #15803d;
+  --core-yellow-50: #fefce8;
+  --core-yellow-400: #facc15;
+  --core-yellow-700: #a16207;
+
+  /* Semantic: Light */
+  --surface: var(--core-gray-00);
+  --surface-subtle: var(--core-gray-50);
+  --surface-raised: var(--core-gray-00);
+  --surface-hover: var(--core-gray-100);
+  --surface-selected: var(--core-primary-50);
+  --surface-inverted: var(--core-gray-900);
+  --surface-success: var(--core-green-50);
+  --surface-error: var(--core-red-50);
+  --surface-warning: var(--core-yellow-50);
+  --border: var(--core-gray-200);
+  --border-strong: var(--core-gray-300);
+  --border-action: var(--core-primary-500);
+  --border-success: var(--core-green-600);
+  --border-error: var(--core-red-600);
+  --text: var(--core-gray-900);
+  --text-muted: var(--core-gray-600);
+  --text-subtle: var(--core-gray-500);
+  --text-inverted: var(--core-gray-00);
+  --text-on-action: var(--core-gray-00);
+  --text-info: var(--core-primary-600);
+  --text-success: var(--core-green-700);
+  --text-error: var(--core-red-700);
+  --text-warning: var(--core-yellow-700);
+  --action: var(--core-primary-500);
+  --action-hover: var(--core-primary-600);
+  --action-click: var(--core-primary-700);
+  --action-disabled: var(--core-primary-200);
+  --icon: var(--core-gray-900);
+  --icon-subtle: var(--core-gray-500);
+  --focus-ring: var(--core-primary-500);
+  --overlay: rgb(255 255 255 / 0.72);
+  --overlay-strong: rgb(255 255 255 / 0.92);
+  --hero-from: #000000;
+  --hero-to: #666666;
+}
+
+.dark {
+  --surface: var(--core-gray-870);
+  --surface-subtle: var(--core-gray-850);
+  --surface-raised: var(--core-gray-850);
+  --surface-hover: var(--core-gray-800);
+  --surface-selected: var(--core-gray-800);
+  --surface-inverted: var(--core-gray-00);
+  --surface-success: var(--core-gray-800);
+  --surface-error: var(--core-gray-800);
+  --surface-warning: var(--core-gray-800);
+  --border: var(--core-gray-750);
+  --border-strong: var(--core-gray-600);
+  --border-action: var(--core-primary-400);
+  --border-success: var(--core-green-400);
+  --border-error: var(--core-red-400);
+  --text: var(--core-gray-50);
+  --text-muted: var(--core-gray-300);
+  --text-subtle: var(--core-gray-400);
+  --text-inverted: var(--core-gray-900);
+  --text-on-action: var(--core-gray-00);
+  --text-info: var(--core-primary-300);
+  --text-success: var(--core-green-400);
+  --text-error: var(--core-red-400);
+  --text-warning: var(--core-yellow-400);
+  --action: var(--core-primary-500);
+  --action-hover: var(--core-primary-600);
+  --action-click: var(--core-primary-700);
+  --action-disabled: var(--core-primary-900);
+  --icon: var(--core-gray-50);
+  --icon-subtle: var(--core-gray-400);
+  --focus-ring: var(--core-primary-300);
+  --overlay: rgb(24 24 24 / 0.72);
+  --overlay-strong: rgb(24 24 24 / 0.94);
+  --hero-from: #ffffff;
+  --hero-to: #9b9b9b;
+}
+
+@theme inline {
+  --font-sans: "Manrope Variable", system-ui, sans-serif;
+  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-selected: var(--surface-selected);
+  --color-surface-inverted: var(--surface-inverted);
+  --color-surface-success: var(--surface-success);
+  --color-surface-error: var(--surface-error);
+  --color-surface-warning: var(--surface-warning);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-border-action: var(--border-action);
+  --color-border-success: var(--border-success);
+  --color-border-error: var(--border-error);
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+  --color-inverted: var(--text-inverted);
+  --color-on-action: var(--text-on-action);
+  --color-info: var(--text-info);
+  --color-success: var(--text-success);
+  --color-error: var(--text-error);
+  --color-warning: var(--text-warning);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-action-click: var(--action-click);
+  --color-action-disabled: var(--action-disabled);
+  --color-icon: var(--icon);
+  --color-icon-subtle: var(--icon-subtle);
+  --color-focus: var(--focus-ring);
+  --color-overlay: var(--overlay);
+  --color-overlay-strong: var(--overlay-strong);
+}
+
+/* ==========================================================================
+   Базовые стили
+   ========================================================================== */
 html {
   scroll-behavior: smooth;
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
 }
 
 body {
-  @apply antialiased;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  @apply bg-surface text-ink antialiased;
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Текстовые стили. Каждый кусок текста использует одно из этих имён.
+   Размеры берутся только из шкалы Tailwind. Заголовки на мобильном
+   опускаются на ступени шкалы вниз, чтобы не ломать вёрстку на 390px.
+   ========================================================================== */
+@utility heading-1 {
+  @apply text-4xl font-semibold text-balance md:text-6xl;
+}
+@utility heading-2 {
+  @apply text-3xl font-semibold text-balance md:text-5xl;
+}
+@utility heading-3 {
+  @apply text-2xl font-semibold text-balance md:text-4xl;
+}
+@utility heading-4 {
+  @apply text-2xl font-semibold text-balance md:text-3xl;
+}
+@utility heading-5 {
+  @apply text-2xl font-semibold text-balance;
+}
+@utility heading-6 {
+  @apply text-xl font-semibold text-balance;
+}
+@utility title-1 {
+  @apply text-xl font-medium;
+}
+@utility title-2 {
+  @apply text-lg font-medium;
+}
+@utility title-3 {
+  @apply text-base font-medium;
+}
+@utility title-4 {
+  @apply text-sm font-medium;
+}
+@utility title-5 {
+  @apply text-xs font-medium;
+}
+@utility body-1 {
+  @apply text-base font-semibold text-pretty;
+}
+@utility body-2 {
+  @apply text-base font-medium text-pretty;
+}
+@utility body-3 {
+  @apply text-base font-normal text-pretty;
+}
+@utility body-4 {
+  @apply text-sm font-semibold text-pretty;
+}
+@utility body-5 {
+  @apply text-sm font-medium text-pretty;
+}
+@utility body-6 {
+  @apply text-sm font-normal text-pretty;
+}
+@utility button-lg {
+  @apply text-lg font-semibold;
+}
+@utility button-md {
+  @apply text-base font-semibold;
+}
+@utility button-sm {
+  @apply text-sm font-semibold;
+}
+@utility button-xsm {
+  @apply text-xs font-semibold;
+}
+@utility caption-1 {
+  @apply text-sm font-medium;
+}
+@utility caption-2 {
+  @apply text-sm font-normal;
+}
+@utility caption-3 {
+  @apply text-xs font-semibold;
+}
+@utility caption-4 {
+  @apply text-xs font-medium;
+}
+@utility caption-5 {
+  @apply text-xs font-normal;
+}
+
+/* Градиент разрешён только на тексте заголовка hero */
+@utility hero-text {
+  background-image: linear-gradient(to right, var(--hero-from), var(--hero-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ==========================================================================
+   Движение: только transform и opacity, кривая ease-brand
+   ========================================================================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition:
+    opacity 700ms var(--ease-brand),
+    transform 700ms var(--ease-brand);
+}
+.reveal[data-in="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+.word {
+  opacity: 0.3;
+  transition: opacity 500ms var(--ease-brand);
+}
+.word[data-on="true"] {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    transform: none;
+    transition: opacity 300ms var(--ease-brand);
+  }
+  .word {
+    opacity: 1;
+    transition: none;
+  }
+  .motion-safe-only {
+    transform: none !important;
+  }
 }

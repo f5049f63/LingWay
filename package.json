@@ -21,7 +21,8 @@
     "db:generate": "npm run db:generate -w server",
     "db:deploy": "npm run db:deploy -w server",
     "db:seed": "npm run db:seed -w server",
-    "db:studio": "npm run db:studio -w server"
+    "db:studio": "npm run db:studio -w server",
+    "check:design": "node scripts/check-design.mjs"
   },
   "devDependencies": {
     "concurrently": "^10.0.7",
