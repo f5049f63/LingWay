@@ -5,6 +5,7 @@ import { GuestOnly, RequireAuth } from "./components/RouteGuards";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import Register from "./pages/Register";
 
 // Страницы ещё без дизайна, это заглушки. Когда делаешь настоящую страницу, замени element в нужном маршруте.
 export default function App() {
@@ -23,7 +24,7 @@ export default function App() {
         {/* Только для гостей */}
         <Route element={<GuestOnly />}>
           <Route path="login" element={<Login />} />
-          <Route path="register" element={<ComingSoon title="Регистрация" />} />
+          <Route path="register" element={<Register />} />
         </Route>
 
         {/* Только для вошедших */}
