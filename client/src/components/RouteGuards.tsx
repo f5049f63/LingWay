@@ -20,12 +20,16 @@ export function RequireAuth() {
   return <Outlet />;
 }
 
-/** Только для гостей: вошедшего отправляет в приложение (или туда, откуда его привели на вход) */
+/**
+ * Только для гостей: вошедшего отправляет в приложение (или туда, откуда его привели на вход).
+ * Кто ещё не проходил онбординг, сначала попадает на него.
+ */
 export function GuestOnly() {
   const { user } = useAuth();
   const location = useLocation();
   if (user === undefined) return <Checking />;
   if (user) {
+    if (!user.onboarded) return <Navigate to="/welcome" replace />;
     const from = (location.state as { from?: string } | null)?.from ?? "/learn";
     return <Navigate to={from} replace />;
   }
