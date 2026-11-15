@@ -1,6 +1,7 @@
 import { MoonIcon, SunIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import Button from "./Button";
 import Logo from "./Logo";
@@ -47,6 +48,7 @@ function MenuToggle({ open, onClick }: { open: boolean; onClick: () => void }) {
 function Header() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const { user, logout } = useAuth();
 
   useEffect(() => setOpen(false), [pathname]);
 
@@ -77,13 +79,29 @@ function Header() {
         </nav>
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          <div className="hidden items-center gap-1 md:flex">
-            <Button to="/login" variant="tertiary" size="sm">
-              Войти
-            </Button>
-            <Button to="/register" size="sm">
-              Регистрация
-            </Button>
+          {/* Пока проверяем вход, место держим пустым, чтобы шапка не прыгала */}
+          <div
+            className={`hidden items-center gap-1 md:flex ${user === undefined ? "invisible" : ""}`}
+          >
+            {user ? (
+              <>
+                <Button to="/profile" variant="tertiary" size="sm">
+                  {user.name}
+                </Button>
+                <Button onClick={logout} size="sm" variant="secondary">
+                  Выйти
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button to="/login" variant="tertiary" size="sm">
+                  Войти
+                </Button>
+                <Button to="/register" size="sm">
+                  Регистрация
+                </Button>
+              </>
+            )}
           </div>
           <MenuToggle open={open} onClick={() => setOpen((v) => !v)} />
         </div>
@@ -99,8 +117,12 @@ function Header() {
       >
         {[
           ...navItems,
-          { to: "/login", label: "Войти" },
-          { to: "/register", label: "Регистрация" },
+          ...(user
+            ? [{ to: "/profile", label: user.name }]
+            : [
+                { to: "/login", label: "Войти" },
+                { to: "/register", label: "Регистрация" },
+              ]),
         ].map((item, i) => (
           <NavLink
             key={item.to}
@@ -116,6 +138,16 @@ function Header() {
             {item.label}
           </NavLink>
         ))}
+        {user && (
+          <button
+            type="button"
+            onClick={logout}
+            tabIndex={open ? 0 : -1}
+            className="heading-4 py-2 text-left text-muted"
+          >
+            Выйти
+          </button>
+        )}
       </div>
     </header>
   );
