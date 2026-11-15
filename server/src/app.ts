@@ -4,6 +4,7 @@ import express from "express";
 import helmet from "helmet";
 import { env } from "./env";
 import { errorHandler, notFound } from "./middleware/errorHandler";
+import { accountRouter } from "./routes/account";
 import { authRouter } from "./routes/auth";
 import { healthRouter } from "./routes/health";
 import { situationsRouter } from "./routes/situations";
@@ -26,6 +27,7 @@ export function createApp() {
 
   app.use("/api/health", healthRouter);
   app.use("/api/auth", authRouter);
+  app.use("/api/account", accountRouter);
   app.use("/api/situations", situationsRouter);
 
   app.use(notFound);

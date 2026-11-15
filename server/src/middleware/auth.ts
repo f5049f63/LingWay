@@ -1,19 +1,31 @@
+import type { User } from "@prisma/client";
 import type { RequestHandler } from "express";
-import { AUTH_COOKIE, readToken, type TokenPayload } from "../lib/auth";
+import { prisma } from "../db";
+import { AUTH_COOKIE, clearAuthCookie, readToken } from "../lib/auth";
 
 declare module "express-serve-static-core" {
   interface Request {
-    auth?: TokenPayload;
+    /** Текущий пользователь, заполняется в requireAuth */
+    user?: User;
   }
 }
 
-/** Пускает только вошедших пользователей, кладёт данные токена в req.auth */
-export const requireAuth: RequestHandler = (req, res, next) => {
+/**
+ * Пускает только вошедших. Берёт пользователя из базы, поэтому удалённый аккаунт
+ * и токен, выданный до смены пароля, больше не работают.
+ */
+export const requireAuth: RequestHandler = async (req, res, next) => {
   const payload = readToken(req.cookies?.[AUTH_COOKIE]);
-  if (!payload) {
+  const user = payload ? await prisma.user.findUnique({ where: { id: payload.sub } }) : null;
+  const changedAt = user?.passwordChangedAt
+    ? Math.floor(user.passwordChangedAt.getTime() / 1000)
+    : 0;
+
+  if (!payload || !user || payload.iat < changedAt) {
+    clearAuthCookie(res);
     res.status(401).json({ error: "Нужно войти в аккаунт" });
     return;
   }
-  req.auth = payload;
+  req.user = user;
   next();
 };
