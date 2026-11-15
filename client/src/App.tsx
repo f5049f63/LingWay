@@ -2,10 +2,12 @@ import { Route, Routes } from "react-router-dom";
 import ComingSoon from "./components/ComingSoon";
 import Layout from "./components/Layout";
 import { GuestOnly, RequireAuth } from "./components/RouteGuards";
+import Forgot from "./pages/Forgot";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Register from "./pages/Register";
+import Reset from "./pages/Reset";
 
 // Страницы ещё без дизайна, это заглушки. Когда делаешь настоящую страницу, замени element в нужном маршруте.
 export default function App() {
@@ -25,7 +27,9 @@ export default function App() {
         <Route element={<GuestOnly />}>
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="forgot" element={<Forgot />} />
         </Route>
+        <Route path="reset/:token" element={<Reset />} />
 
         {/* Только для вошедших */}
         <Route element={<RequireAuth />}>
