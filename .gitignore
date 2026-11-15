@@ -1,0 +1,37 @@
+# Зависимости и сборка
+node_modules/
+dist/
+build/
+coverage/
+
+# Секреты
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Логи и системные файлы
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Редакторы
+.idea/
+.vscode/*
+!.vscode/settings.json
+
+# Локальные БД
+*.db
+*.sqlite
+
+# Документы отчётов (ведутся вне репозитория)
+*.docx
+*.doc
+
+# Служебные файлы для работы с нейросетью (лежат локально, не пушатся)
+AGENTS.md
+CLAUDE.md
+PLAN.md
+.claude/
+docs/HOW_IT_WORKS.md
