@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import Alert from "../components/Alert";
 import Button from "../components/Button";
 import ChoiceCard from "../components/ChoiceCard";
+import TripRoute from "../components/TripRoute";
 import type { User } from "../context/AuthContext";
 import { destinations, levels, purposes, type Option } from "../data/onboarding";
 import { useAuth } from "../hooks/useAuth";
@@ -71,17 +72,19 @@ export default function Welcome() {
     destination: user?.trip.destination ?? undefined,
     level: user?.trip.level ?? undefined,
   }));
+  // Ответы уже есть: сразу показываем маршрут, а опрос открываем по кнопке «Изменить ответы»
+  const [showRoute, setShowRoute] = useState(Boolean(user?.onboarded && user.trip.purpose));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
 
-  // При переходе на следующий шаг переводим фокус на заголовок, чтобы скринридер прочитал вопрос
+  // При смене шага или экрана переводим фокус на заголовок, чтобы скринридер прочитал вопрос
   useEffect(() => {
     if (firstRender.current) {
       firstRender.current = false;
       return;
     }
     headingRef.current?.focus();
-  }, [step]);
+  }, [step, showRoute]);
 
   const current = steps[step];
   const last = step === steps.length - 1;
@@ -96,11 +99,33 @@ export default function Welcome() {
         body: JSON.stringify(answers),
       });
       setUser(r.user);
-      navigate("/learn");
+      setShowRoute(true);
+      setLoading(false);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Не удалось сохранить. Попробуйте ещё раз");
       setLoading(false);
     }
+  };
+
+  const edit = () => {
+    setStep(0);
+    setError(undefined);
+    setShowRoute(false);
+  };
+
+  // Отмена изменений: возвращаем сохранённые ответы
+  const cancel = () => {
+    if (!user?.trip.purpose) {
+      navigate("/learn");
+      return;
+    }
+    setAnswers({
+      purpose: user.trip.purpose ?? undefined,
+      destination: user.trip.destination ?? undefined,
+      level: user.trip.level ?? undefined,
+    });
+    setError(undefined);
+    setShowRoute(true);
   };
 
   const skip = async () => {
@@ -115,6 +140,14 @@ export default function Welcome() {
       setLoading(false);
     }
   };
+
+  if (showRoute && user) {
+    return (
+      <section className="mx-auto max-w-3xl px-4 py-12">
+        <TripRoute trip={user.trip} onEdit={edit} headingRef={headingRef} />
+      </section>
+    );
+  }
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-12">
@@ -175,7 +208,11 @@ export default function Welcome() {
                 Назад
               </Button>
             )}
-            {!user?.onboarded && (
+            {user?.onboarded ? (
+              <Button variant="tertiary" disabled={loading} onClick={cancel}>
+                Отмена
+              </Button>
+            ) : (
               <Button variant="tertiary" disabled={loading} onClick={skip}>
                 Пропустить
               </Button>
