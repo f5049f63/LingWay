@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-type Variant = "primary" | "secondary" | "tertiary" | "light";
+type Variant = "primary" | "secondary" | "tertiary" | "light" | "danger";
 type Size = "sm" | "md" | "lg";
 
 interface Props {
@@ -27,6 +27,8 @@ const sizes: Record<Size, string> = {
 
 const variants: Record<Variant, string> = {
   primary: "mat-action press text-on-action",
+  danger:
+    "border border-border-error bg-surface text-error hover:bg-surface-error active:scale-[0.98]",
   light: "mat-raised text-ink hover:bg-surface-hover active:scale-[0.98]",
   secondary: "mat-raised text-ink hover:bg-surface-hover active:scale-[0.98]",
   tertiary: "text-ink hover:bg-surface-hover active:bg-surface-selected active:scale-[0.98]",

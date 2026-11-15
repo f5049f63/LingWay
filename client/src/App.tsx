@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import ComingSoon from "./components/ComingSoon";
 import Layout from "./components/Layout";
+import { GuestOnly, RequireAuth } from "./components/RouteGuards";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -17,13 +18,22 @@ export default function App() {
         />
         <Route path="situation/:slug" element={<ComingSoon title="Ситуация" />} />
         <Route path="lesson/:id" element={<ComingSoon title="Урок" />} />
-        <Route path="practice" element={<ComingSoon title="Практика" />} />
-        <Route path="vocab" element={<ComingSoon title="Мой словарь" />} />
         <Route path="phrasebook" element={<ComingSoon title="Разговорник" />} />
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<ComingSoon title="Регистрация" />} />
-        <Route path="profile" element={<ComingSoon title="Профиль" />} />
-        <Route path="settings" element={<ComingSoon title="Настройки" />} />
+
+        {/* Только для гостей */}
+        <Route element={<GuestOnly />}>
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<ComingSoon title="Регистрация" />} />
+        </Route>
+
+        {/* Только для вошедших */}
+        <Route element={<RequireAuth />}>
+          <Route path="practice" element={<ComingSoon title="Практика" />} />
+          <Route path="vocab" element={<ComingSoon title="Мой словарь" />} />
+          <Route path="profile" element={<ComingSoon title="Профиль" />} />
+          <Route path="settings" element={<ComingSoon title="Настройки" />} />
+        </Route>
+
         <Route path="about" element={<ComingSoon title="О проекте" />} />
         <Route path="privacy" element={<ComingSoon title="Конфиденциальность" />} />
         <Route path="terms" element={<ComingSoon title="Условия использования" />} />
