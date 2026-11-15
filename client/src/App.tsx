@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Register from "./pages/Register";
 import Reset from "./pages/Reset";
+import Settings from "./pages/Settings";
 
 // Страницы ещё без дизайна, это заглушки. Когда делаешь настоящую страницу, замени element в нужном маршруте.
 export default function App() {
@@ -36,7 +37,7 @@ export default function App() {
           <Route path="practice" element={<ComingSoon title="Практика" />} />
           <Route path="vocab" element={<ComingSoon title="Мой словарь" />} />
           <Route path="profile" element={<ComingSoon title="Профиль" />} />
-          <Route path="settings" element={<ComingSoon title="Настройки" />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         <Route path="about" element={<ComingSoon title="О проекте" />} />

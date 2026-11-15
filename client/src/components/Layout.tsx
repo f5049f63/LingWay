@@ -1,4 +1,4 @@
-import { MoonIcon, SunIcon } from "@phosphor-icons/react";
+import { GearIcon, MoonIcon, SunIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -88,6 +88,13 @@ function Header() {
                 <Button to="/profile" variant="tertiary" size="sm">
                   {user.name}
                 </Button>
+                <Link
+                  to="/settings"
+                  aria-label="Настройки"
+                  className="flex size-10 items-center justify-center rounded-lg text-icon transition-colors duration-300 ease-brand hover:bg-surface-hover active:scale-[0.98]"
+                >
+                  <GearIcon size={20} />
+                </Link>
                 <Button onClick={logout} size="sm" variant="secondary">
                   Выйти
                 </Button>
@@ -118,7 +125,10 @@ function Header() {
         {[
           ...navItems,
           ...(user
-            ? [{ to: "/profile", label: user.name }]
+            ? [
+                { to: "/profile", label: user.name },
+                { to: "/settings", label: "Настройки" },
+              ]
             : [
                 { to: "/login", label: "Войти" },
                 { to: "/register", label: "Регистрация" },
