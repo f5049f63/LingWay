@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import ComingSoon from "./components/ComingSoon";
 import Layout from "./components/Layout";
 import Landing from "./pages/Landing";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
 // Страницы ещё без дизайна, это заглушки. Когда делаешь настоящую страницу, замени element в нужном маршруте.
@@ -19,7 +20,7 @@ export default function App() {
         <Route path="practice" element={<ComingSoon title="Практика" />} />
         <Route path="vocab" element={<ComingSoon title="Мой словарь" />} />
         <Route path="phrasebook" element={<ComingSoon title="Разговорник" />} />
-        <Route path="login" element={<ComingSoon title="Вход" />} />
+        <Route path="login" element={<Login />} />
         <Route path="register" element={<ComingSoon title="Регистрация" />} />
         <Route path="profile" element={<ComingSoon title="Профиль" />} />
         <Route path="settings" element={<ComingSoon title="Настройки" />} />
